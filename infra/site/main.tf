@@ -153,7 +153,7 @@ resource "aws_cloudfront_origin_access_control" "site" {
 resource "aws_cloudfront_function" "www_redirect" {
   name    = "portfolio-www-redirect"
   runtime = "cloudfront-js-2.0"
-  comment = "301 www -> apex"
+  comment = "301 www -> apex; clean URLs without .html"
   publish = true
   code    = file("${path.module}/www-redirect.js")
 }
