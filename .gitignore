@@ -1,0 +1,11 @@
+.DS_Store
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+*.tfplan
+
+# Personal notes, not part of the site
+seo

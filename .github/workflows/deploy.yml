@@ -1,0 +1,97 @@
+name: Deploy site
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# OIDC: GitHub mints a short-lived token, AWS swaps it for temporary
+# credentials. No AWS access keys are stored in GitHub.
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: us-east-1
+  TF_VERSION: "~1.13.0"
+  TF_DIR: infra/site
+
+jobs:
+  plan:
+    name: Terraform plan
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_PLAN_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Format check
+        run: terraform fmt -check -recursive infra
+
+      - name: Init
+        working-directory: ${{ env.TF_DIR }}
+        run: terraform init -input=false
+
+      - name: Validate
+        working-directory: ${{ env.TF_DIR }}
+        run: terraform validate
+
+      # -lock=false: the plan role is read-only and can't write the lock file.
+      - name: Plan
+        working-directory: ${{ env.TF_DIR }}
+        run: terraform plan -input=false -lock=false -no-color
+
+  deploy:
+    name: Apply infra and publish site
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false # so `terraform output -raw` returns clean values
+
+      - name: Init
+        working-directory: ${{ env.TF_DIR }}
+        run: terraform init -input=false
+
+      - name: Apply
+        working-directory: ${{ env.TF_DIR }}
+        run: terraform apply -input=false -auto-approve
+
+      - name: Read outputs
+        id: tf
+        working-directory: ${{ env.TF_DIR }}
+        run: |
+          echo "bucket=$(terraform output -raw site_bucket)" >> "$GITHUB_OUTPUT"
+          echo "distribution=$(terraform output -raw distribution_id)" >> "$GITHUB_OUTPUT"
+
+      - name: Upload site
+        run: aws s3 sync site/ "s3://${{ steps.tf.outputs.bucket }}" --delete --exclude ".DS_Store"
+
+      - name: Invalidate CDN cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id "${{ steps.tf.outputs.distribution }}" \
+            --paths "/*"
