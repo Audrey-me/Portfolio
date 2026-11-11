@@ -12,6 +12,21 @@ variable "domain_name" {
 variable "github_repo" {
   description = "GitHub repository allowed to assume the CI roles, as owner/name"
   type        = string
+
+  validation {
+    condition     = length(split("/", var.github_repo)) == 2
+    error_message = "github_repo must be in the form owner/name."
+  }
+}
+
+variable "github_owner_id" {
+  description = "Numeric GitHub ID of the repo owner (\"owner.id\" from https://api.github.com/repos/OWNER/NAME)"
+  type        = string
+}
+
+variable "github_repo_id" {
+  description = "Numeric GitHub ID of the repo (\"id\" from https://api.github.com/repos/OWNER/NAME)"
+  type        = string
 }
 
 variable "state_bucket_name" {
