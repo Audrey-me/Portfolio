@@ -1,6 +1,6 @@
 # kosisochukwuakaeze.com
 
-Static portfolio site on AWS, provisioned with Terraform and deployed by GitHub Actions.
+portfolio site on AWS, provisioned with Terraform and deployed by GitHub Actions.
 
 ```
 Visitor ─▶ Route 53 ─▶ CloudFront (HTTPS, ACM cert, security headers, www→apex) ─▶ private S3 bucket
