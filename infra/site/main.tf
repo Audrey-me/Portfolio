@@ -56,6 +56,12 @@ resource "aws_s3_bucket_lifecycle_configuration" "site" {
     noncurrent_version_expiration {
       noncurrent_days = 30
     }
+    expiration {
+      expired_object_delete_marker = true # remove leftover "deleted" markers
+    }
+    abort_incomplete_multipart_upload {
+      days_after_initiation = 7 # clean up uploads that failed partway
+    }
   }
   depends_on = [aws_s3_bucket_versioning.site]
 }

@@ -77,6 +77,13 @@ locals {
 
   site_bucket_arn  = "arn:aws:s3:::${var.site_bucket_name}"
   state_bucket_arn = aws_s3_bucket.tfstate.arn
+
+  # GitHub's OIDC subject pins the owner and repo by numeric ID
+  # (repo:owner@123/name@456:...), so a deleted-and-recreated repo with the
+  # same name can't inherit these roles.
+  github_owner      = split("/", var.github_repo)[0]
+  github_repo_name  = split("/", var.github_repo)[1]
+  github_sub_prefix = "repo:${local.github_owner}@${var.github_owner_id}/${local.github_repo_name}@${var.github_repo_id}"
 }
 
 data "aws_iam_policy_document" "trust_pull_request" {
@@ -94,7 +101,7 @@ data "aws_iam_policy_document" "trust_pull_request" {
     condition {
       test     = "StringEquals"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:${var.github_repo}:pull_request"]
+      values   = ["${local.github_sub_prefix}:pull_request"]
     }
   }
 }
@@ -114,7 +121,7 @@ data "aws_iam_policy_document" "trust_main_branch" {
     condition {
       test     = "StringEquals"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:${var.github_repo}:ref:refs/heads/main"]
+      values   = ["${local.github_sub_prefix}:ref:refs/heads/main"]
     }
   }
 }

@@ -23,9 +23,9 @@ GitHub Actions ──OIDC──▶ IAM role ──────────┘  t
 
 ## First-time setup
 1. Upgrade Terraform to 1.10 or later (`brew install hashicorp/tap/terraform`) and sign in to AWS (`aws login` or `aws configure sso`).
-2. `cd infra/bootstrap && terraform init && terraform apply`
+2. `cd infra/bootstrap && terraform init && terraform plan && terraform apply`
 3. At your domain registrar, replace the nameservers with the four in the `nameservers` output. Wait until `dig NS kosisochukwuakaeze.com +short` shows the AWS ones.
-4. In GitHub, go to **Settings → Secrets and variables → Actions → Variables** and add `AWS_PLAN_ROLE_ARN` and `AWS_DEPLOY_ROLE_ARN` from the outputs.
+4. In GitHub, go to **Settings → Secrets and variables → Actions → Secrets** and add `AWS_PLAN_ROLE_ARN` and `AWS_DEPLOY_ROLE_ARN` from the outputs.
 5. Push to `main`. The first run takes about 5–15 minutes while the certificate validates and CloudFront deploys.
 
 After that, every push to `main` publishes the site.
