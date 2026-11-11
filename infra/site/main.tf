@@ -45,6 +45,13 @@ resource "aws_s3_bucket_versioning" "site" {
   versioning_configuration {
     status = "Enabled"
   }
+  expiration {
+    expired_object_delete_marker = true   
+  }
+  abort_incomplete_multipart_upload {
+    days_after_initiation = 7             
+  }
+
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "site" {
