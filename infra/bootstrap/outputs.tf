@@ -4,12 +4,12 @@ output "nameservers" {
 }
 
 output "plan_role_arn" {
-  description = "GitHub repo variable AWS_PLAN_ROLE_ARN"
+  description = "GitHub Actions secret AWS_PLAN_ROLE_ARN"
   value       = aws_iam_role.plan.arn
 }
 
 output "deploy_role_arn" {
-  description = "GitHub repo variable AWS_DEPLOY_ROLE_ARN"
+  description = "GitHub Actions secret AWS_DEPLOY_ROLE_ARN"
   value       = aws_iam_role.deploy.arn
 }
 
