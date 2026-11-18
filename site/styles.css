@@ -385,8 +385,8 @@ button:focus-visible {
   overflow-wrap: anywhere;
 }
 
-.oss-item:hover .oss-title,
-.oss-item:focus-visible .oss-title {
+a.oss-item:hover .oss-title,
+a.oss-item:focus-visible .oss-title {
   text-decoration: underline;
   text-underline-offset: 0.2em;
 }
